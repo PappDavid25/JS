@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kurzusok és Diákok Kezelése</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .btn {
+            margin: 5px 0;
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .list-item {
+            padding: 10px;
+            border: 1px solid #ddd;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Kurzusok és Diákok Kezelése</h1>
+        <div>
+            <button class="btn" onclick="showCourses()">Kurzusok</button>
+            <button class="btn" onclick="showStudents()">Diákok</button>
+        </div>
+
+        <div id="content"></div>
+    </div>
+
+    <script>
+        const apiBase = 'https://vvri.pythonanywhere.com/api';
+
+        function showCourses() {
+            fetch(`${apiBase}/courses`)
+                .then(response => response.json())
+                .then(data => {
+                    renderCourses(data);
+                })
+                .catch(error => console.error('Hiba a kurzusok betöltésekor:', error));
+        }
+
+        function renderCourses(courses) {
+            const content = document.getElementById('content');
+            content.innerHTML = '<h2>Kurzusok</h2>';
+            courses.forEach(course => {
+                const div = document.createElement('div');
+                div.className = 'list-item';
+                div.innerHTML = `
+                    <span>${course.name}</span>
+                    <div>
+                        <button class="btn" onclick="editCourse(${course.id})">Szerkesztés</button>
+                        <button class="btn" onclick="deleteCourse(${course.id})">Törlés</button>
+                    </div>
+                `;
+                content.appendChild(div);
+            });
+
+            const addForm = document.createElement('div');
+            addForm.className = 'form-group';
+            addForm.innerHTML = `
+                <input type="text" id="newCourseName" placeholder="Új kurzus neve" />
+                <button class="btn" onclick="addCourse()">Hozzáadás</button>
+            `;
+            content.appendChild(addForm);
+        }
+
+        function addCourse() {
+            const courseName = document.getElementById('newCourseName').value;
+            fetch(`${apiBase}/courses`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: courseName })
+            })
+                .then(() => showCourses())
+                .catch(error => console.error('Hiba kurzus hozzáadásakor:', error));
+        }
+
+        function deleteCourse(id) {
+            fetch(`${apiBase}/courses/${id}`, { method: 'DELETE' })
+                .then(() => showCourses())
+                .catch(error => console.error('Hiba kurzus törlésekor:', error));
+        }
+
+        function editCourse(id) {
+            const newName = prompt('Adja meg az új nevet:');
+            if (newName) {
+                fetch(`${apiBase}/courses/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: newName })
+                })
+                    .then(() => showCourses())
+                    .catch(error => console.error('Hiba kurzus szerkesztésekor:', error));
+            }
+        }
+
+        function showStudents() {
+            fetch(`${apiBase}/students`)
+                .then(response => response.json())
+                .then(data => {
+                    renderStudents(data);
+                })
+                .catch(error => console.error('Hiba a diákok betöltésekor:', error));
+        }
+
+        function renderStudents(students) {
+            const content = document.getElementById('content');
+            content.innerHTML = '<h2>Diákok</h2>';
+            students.forEach(student => {
+                const div = document.createElement('div');
+                div.className = 'list-item';
+                div.innerHTML = `
+                    <span>${student.name}</span>
+                    <div>
+                        <button class="btn" onclick="editStudent(${student.id})">Szerkesztés</button>
+                        <button class="btn" onclick="deleteStudent(${student.id})">Törlés</button>
+                    </div>
+                `;
+                content.appendChild(div);
+            });
+
+            const addForm = document.createElement('div');
+            addForm.className = 'form-group';
+            addForm.innerHTML = `
+                <input type="text" id="newStudentName" placeholder="Új diák neve" />
+                <button class="btn" onclick="addStudent()">Hozzáadás</button>
+            `;
+            content.appendChild(addForm);
+        }
+
+        function addStudent() {
+            const studentName = document.getElementById('newStudentName').value;
+            fetch(`${apiBase}/students`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: studentName })
+            })
+                .then(() => showStudents())
+                .catch(error => console.error('Hiba diák hozzáadásakor:', error));
+        }
+
+        function deleteStudent(id) {
+            fetch(`${apiBase}/students/${id}`, { method: 'DELETE' })
+                .then(() => showStudents())
+                .catch(error => console.error('Hiba diák törlésekor:', error));
+        }
+
+        function editStudent(id) {
+            const newName = prompt('Adja meg az új nevet:');
+            if (newName) {
+                fetch(`${apiBase}/students/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: newName })
+                })
+                    .then(() => showStudents())
+                    .catch(error => console.error('Hiba diák szerkesztésekor:', error));
+            }
+        }
+    </script>
+</body>
+</html>
